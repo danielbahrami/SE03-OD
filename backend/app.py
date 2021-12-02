@@ -1,34 +1,30 @@
-from flask import Flask, request, render_template
-from flask_mysqldb import MySQL
+from flask import Flask, request, redirect, jsonify
+import pymysql.cursors
+
+connection = pymysql.connect(host='db',
+user='root',
+password='',
+database='db',
+cursorclass=pymysql.cursors.DictCursor,)
 
 app = Flask(__name__)
 
-app.config['MYSQL_HOST'] = 'localhost'
-app.config['MYSQL_DB'] = 'db'
-app.config['MYSQL_USER'] = 'user'
-app.config['MYSQL_PASSWORD'] = 'password'
-
-mysql = MySQL(app)
-
 @app.route('/person', methods = ['POST'])
 def person():
-    if request.method == 'POST':
-        person = request.form
-        firstName = person['firstname']
-        lastName = person['lastname']
-        cur = mysql.connection.cursor()
+    person = request.form
+    firstName = person['firstname']
+    lastName = person['lastname']
+    with connection.cursor() as cur:
         cur.execute("INSERT INTO persons (firstName, lastName) VALUES (%s, %s)", (firstName, lastName))
-        mysql.connection.commit()
-        cur.close()
-    return render_template("insert.html")
+    connection.commit()
+    return redirect("https://localhost/select.html")
 
 @app.route('/persons', methods = ['GET'])
 def persons():
-    cur = mysql.connection.cursor()
-    personsQuery = cur.execute("SELECT * FROM persons")
-    if personsQuery > 0:
+    with connection.cursor() as cur:
+        cur.execute("SELECT * FROM persons")
         persons = cur.fetchall()
-    return render_template('select.html', data = persons)
+    return jsonify(persons)
 
 
 if __name__ == '__main__':
