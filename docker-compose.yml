@@ -3,10 +3,6 @@ services:
   db:
     build: database
 
-    environment:
-      MYSQL_USER: "user"
-      MYSQL_ROOT_PASSWORD: "password"
-
     command: --default-authentication-plugin=mysql_native_password
 
     networks:
@@ -16,6 +12,8 @@ services:
     build: backend
     depends_on:
       - db
+    ports:
+      - 5001:5000
 
     networks:
       - frontend
@@ -27,8 +25,7 @@ services:
       - backend
 
     ports:
-      - "80:80"
-      - "443:443"
+      - 443:443
 
     networks:
       - frontend
